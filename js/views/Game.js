@@ -56,6 +56,14 @@
           result = store.getHint();
           label = "Indice";
           break;
+        case "fill_area":
+          result = store.fillArea(args.area);
+          label = result.ok ? "Remplissage de la zone sélectionnée" : "Remplissage impossible";
+          break;
+        case "clear_area":
+          result = store.clearArea(args.area);
+          label = result.ok ? "Effacement de la zone sélectionnée" : "Effacement impossible";
+          break;
         case "solve_grid":
           result = store.solveGrid();
           label = "Résolution automatique";
@@ -101,6 +109,7 @@
           s.store.puzzle.every(function (v) { return !v; })) {
         s.store.newGrid("facile");
       }
+      s._scrollPending = true;
     },
     send: function (s) {
       if (s.busy) return;
@@ -109,6 +118,7 @@
       s.input = "";
       s.busy = true;
       s.error = "";
+      s._scrollPending = true;
       addMessage(s, "user", text);
       var c;
       try {
@@ -120,6 +130,7 @@
       }
       c.interpret(text, s.store.context())
         .then(function (msg) {
+          s._scrollPending = true;
           if (msg.content) addMessage(s, "assistant", msg.content);
           if (msg.toolCalls && msg.toolCalls.length) {
             addMessage(s, "tool", "Appels : " + msg.toolCalls.map(function (tc) {
@@ -136,6 +147,7 @@
         })
         .finally(function () {
           s.busy = false;
+          s._scrollPending = true;
           m.redraw();
         });
     },
@@ -190,7 +202,16 @@
         ]),
         m("div.game-right", [
           m("div.chat", [
-            m("div.chat-messages", s.messages.map(function (msg, idx) {
+            m("div.chat-messages", {
+              id: "chat-messages",
+              oncreate: function (e) { e.dom.scrollTop = e.dom.scrollHeight; },
+              onupdate: function (e) {
+                if (s._scrollPending || s.busy) {
+                  s._scrollPending = false;
+                  e.dom.scrollTop = e.dom.scrollHeight;
+                }
+              }
+            }, s.messages.map(function (msg, idx) {
               return m("div.chat-msg." + msg.role, { key: idx }, msg.text);
             })),
             s.busy ? m("div.chat-msg.system", "L'IA réfléchit…") : null,

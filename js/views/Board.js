@@ -13,6 +13,7 @@
       if (vnode.state.selected !== null && store.given[vnode.state.selected]) {
         vnode.state.selected = null;
       }
+      store.selected = vnode.state.selected;
     },
     oncreate: function (vnode) {
       var self = vnode.state;
@@ -34,6 +35,7 @@
           if (e.key === "ArrowLeft") c = (c + 8) % 9;
           if (e.key === "ArrowRight") c = (c + 1) % 9;
           self.selected = Sudoku.cellIndex(r, c);
+          store.selected = self.selected;
           m.redraw();
           e.preventDefault();
         }
@@ -60,7 +62,10 @@
           if (st.selected === idx) classes.push("selected");
           cells.push(m("div", {
             class: classes.join(" "),
-            onclick: function () { st.selected = store.given[idx] ? null : idx; }
+            onclick: function () {
+              st.selected = store.given[idx] ? null : idx;
+              store.selected = st.selected;
+            }
           }, store.values[idx] ? String(store.values[idx]) : ""));
         })(i);
       }

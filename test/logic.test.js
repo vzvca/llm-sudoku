@@ -125,6 +125,56 @@ describe("GameStore", function () {
     assert.equal(store2.difficulty, "difficile");
   });
 
+  it("remplit la zone de la case sélectionnée", function () {
+    var store = new GameStore(memStorage());
+    store.newGrid("facile");
+    store.selected = store.values.findIndex(function (v, i) { return !v && !store.given[i]; });
+    var r = store.fillArea("row");
+    assert.equal(r.ok, true);
+    assert.ok(r.filled >= 1);
+    var row = Math.floor(store.selected / 9);
+    for (var c = 0; c < 9; c++) {
+      assert.ok(store.values[row * 9 + c] > 0, "case " + c + " vide");
+    }
+    var sel = store.getSelection();
+    assert.equal(sel.row, row + 1);
+    assert.ok(sel.box >= 1 && sel.box <= 9);
+  });
+
+  it("efface le bloc de la case sélectionnée", function () {
+    var store = new GameStore(memStorage());
+    store.newGrid("facile");
+    var emptyIdx = store.values.findIndex(function (v, i) { return !v && !store.given[i]; });
+    store.setCellValue(emptyIdx, store.solution[emptyIdx]);
+    store.selected = emptyIdx;
+    var r = store.clearArea("box");
+    assert.equal(r.ok, true);
+    assert.ok(r.cleared >= 1);
+    assert.equal(store.values[emptyIdx], 0);
+    store.given.forEach(function (g, i) {
+      if (g) assert.ok(store.values[i] > 0, "indice de départ effacé !");
+    });
+  });
+
+  it("signale l'absence de sélection", function () {
+    var store = new GameStore(memStorage());
+    store.newGrid("facile");
+    store.selected = null;
+    var r = store.fillArea("row");
+    assert.equal(r.ok, false);
+  });
+
+  it("inclut la sélection dans le contexte LLM", function () {
+    var store = new GameStore(memStorage());
+    store.newGrid("facile");
+    store.selected = 40;
+    var ctx = store.context();
+    assert.ok(ctx.selection);
+    assert.equal(ctx.selection.row, 5);
+    assert.equal(ctx.selection.column, 5);
+    assert.equal(ctx.selection.box, 5);
+  });
+
   it("expose un contexte lisible pour le LLM", function () {
     var store = new GameStore(memStorage());
     store.newGrid("facile");
@@ -137,7 +187,7 @@ describe("GameStore", function () {
 describe("MistralClient", function () {
   it("définit les outils de function calling", function () {
     var names = MistralClient.TOOLS.map(function (t) { return t.function.name; });
-    ["new_grid", "check_grid", "place_value", "clear_cell", "get_hint", "solve_grid", "reset_grid"].forEach(function (n) {
+    ["new_grid", "check_grid", "place_value", "clear_cell", "get_hint", "solve_grid", "fill_area", "clear_area", "reset_grid"].forEach(function (n) {
       assert.ok(names.indexOf(n) !== -1, "outil manquant : " + n);
     });
   });

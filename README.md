@@ -30,6 +30,8 @@ l'IA Mistral. Écrite en JavaScript vanilla + [Mithril.js](https://mithril.js.or
 | `place_value` | `row`, `column`, `value` (1-9) | Place une valeur |
 | `clear_cell` | `row`, `column` | Efface une case |
 | `get_hint` | — | Suggère la case la plus facile |
+| `fill_area` | `area` (`row`\|`column`\|`box`) | Remplit les cases vides de la ligne/colonne/bloc 3x3 contenant la case sélectionnée |
+| `clear_area` | `area` (`row`\|`column`\|`box`) | Efface les cases saisies de la ligne/colonne/bloc 3x3 contenant la case sélectionnée |
 | `solve_grid` | — | Résolution automatique |
 | `reset_grid` | — | Retour aux indices de départ |
 

@@ -83,6 +83,42 @@
     {
       type: "function",
       function: {
+        name: "fill_area",
+        description: "Remplit automatiquement les cases vides de la zone (ligne, colonne ou bloc 3x3) qui contient la case actuellement sélectionnée par l'utilisateur dans la grille. Ex. « remplis la colonne que je viens de sélectionner ».",
+        parameters: {
+          type: "object",
+          properties: {
+            area: {
+              type: "string",
+              enum: ["row", "column", "box"],
+              description: "Zone à remplir : 'row' pour la ligne, 'column' pour la colonne, 'box' pour le bloc 3x3 contenant la case sélectionnée"
+            }
+          },
+          required: ["area"]
+        }
+      }
+    },
+    {
+      type: "function",
+      function: {
+        name: "clear_area",
+        description: "Efface les cases saisies par l'utilisateur (hors indices de départ) de la zone (ligne, colonne ou bloc 3x3) qui contient la case actuellement sélectionnée. Ex. « efface le bloc où je me trouve ».",
+        parameters: {
+          type: "object",
+          properties: {
+            area: {
+              type: "string",
+              enum: ["row", "column", "box"],
+              description: "Zone à effacer : 'row' pour la ligne, 'column' pour la colonne, 'box' pour le bloc 3x3 contenant la case sélectionnée"
+            }
+          },
+          required: ["area"]
+        }
+      }
+    },
+    {
+      type: "function",
+      function: {
         name: "reset_grid",
         description: "Réinitialise la grille courante aux indices de départ. Sans paramètre.",
         parameters: { type: "object", properties: {}, required: [] }
@@ -98,6 +134,8 @@
     "- Déduis les paramètres de la phrase de l'utilisateur (ex. « prépare-moi une grille difficile » -> new_grid avec difficulty=\"difficile\").",
     "- Les lignes et colonnes vont de 1 à 9 ; la case (1,1) est en haut à gauche.",
     "- Tu peux appeler plusieurs fonctions dans un même tour, dans un ordre logique.",
+    "- L'état du jeu indique la case sélectionnée par l'utilisateur (ligne, colonne, bloc) ; utilise-la pour les fonctions fill_area et clear_area",
+    "  (ex. « remplis la colonne sélectionnée » -> fill_area avec area=\"column\").",
     "- Si la demande est ambiguë ou hors sudoku, réponds par un message simple sans appeler de fonction, en français.",
     "- Sois bref et amical."
   ].join("\n");

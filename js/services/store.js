@@ -14,6 +14,7 @@
     this.solution = new Array(81).fill(0);
     this.difficulty = "facile";
     this.hintIndex = null;
+    this.selected = null;
     this._load();
   }
 
@@ -116,6 +117,85 @@
     };
   };
 
+  GameStore.prototype.getSelection = function () {
+    if (this.selected === null || this.selected < 0 || this.selected > 80) return null;
+    var i = this.selected;
+    return {
+      row: Sudoku.rowOf(i) + 1,
+      column: Sudoku.colOf(i) + 1,
+      box: Sudoku.boxOf(i) + 1,
+      value: this.values[i] || null,
+      fixed: this.given[i] || false
+    };
+  };
+
+  GameStore.prototype.areaIndices = function (area, ref) {
+    var out = [];
+    var r, c;
+    if (area === "row") {
+      r = ref - 1;
+      for (c = 0; c < 9; c++) out.push(Sudoku.cellIndex(r, c));
+    } else if (area === "column") {
+      c = ref - 1;
+      for (r = 0; r < 9; r++) out.push(Sudoku.cellIndex(r, c));
+    } else {
+      var br = Math.floor((ref - 1) / 3) * 3;
+      var bc = ((ref - 1) % 3) * 3;
+      for (r = br; r < br + 3; r++) {
+        for (c = bc; c < bc + 3; c++) out.push(Sudoku.cellIndex(r, c));
+      }
+    }
+    return out;
+  };
+
+  GameStore.prototype.fillArea = function (area) {
+    var sel = this.getSelection();
+    if (!sel) return { ok: false, message: "Aucune case sélectionnée dans la grille" };
+    var ref = area === "row" ? sel.row : (area === "column" ? sel.column : sel.box);
+    var idxs = this.areaIndices(area, ref);
+    var filled = 0;
+    for (var k = 0; k < idxs.length; k++) {
+      var i = idxs[k];
+      if (!this.given[i] && !this.values[i]) {
+        this.values[i] = this.solution[i];
+        filled++;
+      }
+    }
+    this.save();
+    return {
+      ok: true,
+      filled: filled,
+      message: filled > 0
+        ? filled + " case(s) complétée(s) dans la " +
+          (area === "row" ? "ligne " : (area === "column" ? "colonne " : "bloc (3x3) ")) + ref
+        : "La " + (area === "row" ? "ligne " : (area === "column" ? "colonne " : "bloc ")) + ref + " était déjà complète"
+    };
+  };
+
+  GameStore.prototype.clearArea = function (area) {
+    var sel = this.getSelection();
+    if (!sel) return { ok: false, message: "Aucune case sélectionnée dans la grille" };
+    var ref = area === "row" ? sel.row : (area === "column" ? sel.column : sel.box);
+    var idxs = this.areaIndices(area, ref);
+    var cleared = 0;
+    for (var k = 0; k < idxs.length; k++) {
+      var i = idxs[k];
+      if (!this.given[i] && this.values[i]) {
+        this.values[i] = 0;
+        cleared++;
+      }
+    }
+    this.save();
+    return {
+      ok: true,
+      cleared: cleared,
+      message: cleared > 0
+        ? cleared + " case(s) effacée(s) dans la " +
+          (area === "row" ? "ligne " : (area === "column" ? "colonne " : "bloc (3x3) ")) + ref
+        : "Rien à effacer dans la " + (area === "row" ? "ligne " : (area === "column" ? "colonne " : "bloc ")) + ref
+    };
+  };
+
   GameStore.prototype.context = function () {
     var grid = "";
     for (var r = 0; r < 9; r++) {
@@ -128,11 +208,14 @@
       }
       grid += line + "\n";
     }
-    return {
+    var ctx = {
       difficulty: this.difficulty,
       complete: this.values.every(function (v) { return v > 0; }),
       grid: grid.trim()
     };
+    var sel = this.getSelection();
+    if (sel) ctx.selection = sel;
+    return ctx;
   };
 
   GameStore.prototype.status = function () {
