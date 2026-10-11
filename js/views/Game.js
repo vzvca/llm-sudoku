@@ -148,6 +148,9 @@
       if (s.transcribing) return;
       s.transcribing = true;
       s.error = "";
+      s.listening = false;
+      s.interim = "";
+      Game.stopTranscribeLoop(s);
       m.redraw();
       s.recorder.stop().then(function (blob) {
         if (!blob) return null;
