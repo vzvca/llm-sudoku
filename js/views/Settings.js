@@ -14,6 +14,8 @@
       s.keyVisible = false;
       s.saved = false;
       s.mic = { testing: false, level: 0, stream: null, ctx: null, raf: null, error: "" };
+      s.tickSeconds = s.settings.getTranscribeTickMs() / 1000;
+      s.savedTick = false;
     },
     micSupported: function () {
       return !!(global.window && global.window.navigator &&
@@ -131,7 +133,29 @@
                 : "")
             ]),
             s.mic.error ? m("div.chat-error", s.mic.error) : null
-          ])
+          ]),
+          m("div.row", [
+            m("label", "Transcription live toutes les"),
+            m("input[type=number]", {
+              min: 1, max: 10, step: 1,
+              value: s.tickSeconds,
+              oninput: function (e) {
+                s.tickSeconds = e.target.value;
+                var v = s.settings.setTranscribeTickMs(
+                  (parseFloat(e.target.value) || 2) * 1000);
+                s.tickSeconds = v / 1000;
+                s.savedTick = true;
+                clearTimeout(s._tickSavedTimer);
+                s._tickSavedTimer = setTimeout(function () {
+                  s.savedTick = false;
+                  m.redraw();
+                }, 1500);
+              }
+            }),
+            m("span", "secondes"),
+            s.savedTick ? m("span.saved", "✓") : null
+          ]),
+          m("p.hint", "Intervalle d'envoi des segments audio à Voxtral pendant la dictée (1 à 10 s). Plus court = texte plus réactif, mais davantage de requêtes API.")
         ]),
         m("div.settings-card", [
           m("h3", "Exemples de commandes"),

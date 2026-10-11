@@ -194,9 +194,10 @@
     },
     startTranscribeLoop: function (s) {
       Game.stopTranscribeLoop(s);
+      var tickMs = s.settings.getTranscribeTickMs();
       s.transcribeTimer = setInterval(function () {
         if (s.listening && !s.transcribing) Game.transcribeTick(s);
-      }, 2000);
+      }, tickMs);
     },
     stopTranscribeLoop: function (s) {
       if (s.transcribeTimer) {
