@@ -9,8 +9,8 @@ l'IA Mistral. Écrite en JavaScript vanilla + [Mithril.js](https://mithril.js.or
 - Génération de grilles de sudoku (facile / moyen / difficile) à solution unique,
   entièrement en local dans le navigateur.
 - Saisie au clavier ou à la souris, détection des conflits en temps réel.
-- **Interaction IA** : l'utilisateur écrit (ou parle au micro, reconnaissance
-  vocale `fr-FR` via le navigateur) une commande en français, ex.
+- **Interaction IA** : l'utilisateur écrit (ou parle au micro, dictée transcrite par 
+  **Mistral Voxtral**) une commande en français, ex.
   « prépare une nouvelle grille difficile », « mets un 5 ligne 2 colonne 7 »,
   « donne-moi un indice », « vérifie ma grille », « résous la grille ».
   Le message est envoyé à l'API Mistral (chat completions) avec des
