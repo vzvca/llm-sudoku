@@ -106,6 +106,7 @@
       s.recorder = new VoiceRecorder();
       s.transcribed = "";
       s.transcribeTimer = null;
+      s.listenStart = null;
       s.transcribing = false;
       s.speech = new SpeechService();
       s.speech.onText = function (text) {
@@ -142,6 +143,10 @@
     onremove: function (vnode) {
       var s = vnode.state;
       Game.stopTranscribeLoop(s);
+      if (s.listenStart) {
+        s.settings.addVoiceUsage((Date.now() - s.listenStart) / 1000, 0);
+        s.listenStart = null;
+      }
       if (s.recorder) s.recorder.cancel();
     },
     transcribeAndSend: function (s) {
@@ -152,10 +157,15 @@
       s.interim = "";
       Game.stopTranscribeLoop(s);
       m.redraw();
+      if (s.listenStart) {
+        s.settings.addVoiceUsage((Date.now() - s.listenStart) / 1000, 0);
+        s.listenStart = null;
+      }
       s.recorder.stop().then(function (blob) {
         if (!blob) return null;
         var c;
         try { c = client(s); } catch (e) { throw e; }
+        s.settings.addVoiceUsage(0, 1);
         return c.transcribeAudioLoose(blob);
       }).then(function (tailText) {
         var text = [s.transcribed, tailText]
@@ -182,6 +192,7 @@
       try { c = client(s); } catch (e) { return; }
       s.recorder.cutSegment().then(function (blob) {
         if (!blob) return;
+        s.settings.addVoiceUsage(0, 1);
         return c.transcribeAudio(blob).then(function (text) {
           if (text) {
             s.transcribed = (s.transcribed ? s.transcribed + " " : "") + text;
@@ -214,6 +225,7 @@
         s.transcribed = "";
         s.recorder.start().then(function () {
           s.listening = true;
+          s.listenStart = Date.now();
           Game.startTranscribeLoop(s);
           m.redraw();
         }).catch(function (e) {

@@ -184,6 +184,46 @@ describe("GameStore", function () {
   });
 });
 
+describe("Settings (voice usage)", function () {
+  var Settings = require("../js/services/settings.js");
+
+  it("cumule la consommation vocale et l'estime en dollars", function () {
+    var settings = new Settings(memStorage());
+    var u0 = settings.getVoiceUsage();
+    assert.equal(u0.seconds, 0);
+    assert.equal(u0.requests, 0);
+    assert.equal(u0.costUsd, 0);
+
+    settings.addVoiceUsage(30, 3);
+    var u = settings.getVoiceUsage();
+    assert.equal(u.seconds, 30);
+    assert.equal(u.requests, 3);
+    assert.ok(Math.abs(u.costUsd - 30 / 60 * 0.003) < 1e-9);
+
+    var settings2 = new Settings(memStorage());
+    settings2.addVoiceUsage(10, 1);
+    var u2 = settings2.getVoiceUsage();
+    assert.equal(u2.seconds, 10);
+    assert.equal(u2.requests, 1);
+
+    var u3 = settings2.resetVoiceUsage();
+    assert.equal(u3.seconds, 0);
+    assert.equal(u3.requests, 0);
+  });
+
+  it("borne l'intervalle de transcription entre 1 et 10 secondes", function () {
+    var Settings = require("../js/services/settings.js");
+    var settings = new Settings(memStorage());
+    assert.equal(settings.getTranscribeTickMs(), 2000);
+    settings.setTranscribeTickMs(500);
+    assert.equal(settings.getTranscribeTickMs(), 1000);
+    settings.setTranscribeTickMs(60000);
+    assert.equal(settings.getTranscribeTickMs(), 10000);
+    var settings2 = new Settings(memStorage());
+    assert.equal(settings2.getTranscribeTickMs(), 2000);
+  });
+});
+
 describe("MistralClient", function () {
   it("définit les outils de function calling", function () {
     var names = MistralClient.TOOLS.map(function (t) { return t.function.name; });

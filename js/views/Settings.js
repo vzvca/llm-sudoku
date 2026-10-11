@@ -155,7 +155,28 @@
             m("span", "secondes"),
             s.savedTick ? m("span.saved", "✓") : null
           ]),
-          m("p.hint", "Intervalle d'envoi des segments audio à Voxtral pendant la dictée (1 à 10 s). Plus court = texte plus réactif, mais davantage de requêtes API.")
+          m("p.hint", "Intervalle d'envoi des segments audio à Voxtral pendant la dictée (1 à 10 s). Plus court = texte plus réactif, mais davantage de requêtes API."),
+          m("div.usage", (function () {
+            var u = s.settings.getVoiceUsage();
+            var mins = Math.floor(u.seconds / 60);
+            var secs = Math.round(u.seconds % 60);
+            var time = mins > 0 ? mins + " min " + secs + " s" : secs + " s";
+            var cost = u.costUsd < 0.01 && u.costUsd > 0
+              ? u.costUsd.toFixed(4)
+              : u.costUsd.toFixed(2);
+            return [
+              m("strong", "Consommation vocale (ce navigateur) : "),
+              time + " de dictée, " + u.requests + " requête(s) Voxtral",
+              m("span.usage-cost", "≈ " + cost + " $ (voxtral-mini-latest, " +
+                global.Settings.VOXTRAL_USD_PER_MIN + " $/min)"),
+              m("button.small", {
+                onclick: function () {
+                  s.settings.resetVoiceUsage();
+                  m.redraw();
+                }
+              }, "Remettre à zéro")
+            ];
+          })())
         ]),
         m("div.settings-card", [
           m("h3", "Exemples de commandes"),

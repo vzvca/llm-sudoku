@@ -7,6 +7,8 @@
   var DEFAULT_TICK_MS = 2000;
   var MIN_TICK_MS = 1000;
   var MAX_TICK_MS = 10000;
+  var KEY_USAGE = "sudoku.usage.voice";
+  var VOXTRAL_USD_PER_MIN = 0.003;
 
   function Settings(storage) {
     this.storage = storage || null;
@@ -42,9 +44,44 @@
     return v;
   };
 
+  Settings.prototype.getVoiceUsage = function () {
+    var raw = this.storage ? this.storage.getItem(KEY_USAGE) : null;
+    var data = { seconds: 0, requests: 0 };
+    if (raw) {
+      try {
+        var d = JSON.parse(raw);
+        if (typeof d.seconds === "number" && d.seconds >= 0) data.seconds = d.seconds;
+        if (typeof d.requests === "number" && d.requests >= 0) data.requests = d.requests;
+      } catch (e) {}
+    }
+    data.costUsd = data.seconds / 60 * VOXTRAL_USD_PER_MIN;
+    return data;
+  };
+
+  Settings.prototype.addVoiceUsage = function (seconds, requests) {
+    var data = this.getVoiceUsage();
+    data.seconds += Math.max(0, seconds || 0);
+    data.requests += Math.max(0, requests || 0);
+    if (this.storage) {
+      this.storage.setItem(KEY_USAGE, JSON.stringify({
+        seconds: data.seconds,
+        requests: data.requests
+      }));
+    }
+    return data;
+  };
+
+  Settings.prototype.resetVoiceUsage = function () {
+    if (this.storage) {
+      this.storage.setItem(KEY_USAGE, JSON.stringify({ seconds: 0, requests: 0 }));
+    }
+    return this.getVoiceUsage();
+  };
+
   if (typeof module !== "undefined" && module.exports) {
     module.exports = Settings;
   } else {
-    global.Settings = Settings;
+    Settings.VOXTRAL_USD_PER_MIN = VOXTRAL_USD_PER_MIN;
+  global.Settings = Settings;
   }
 })(typeof window !== "undefined" ? window : globalThis);

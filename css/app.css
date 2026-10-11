@@ -238,3 +238,21 @@ button.mic.listening { background: var(--danger); border-color: var(--danger); c
   color: #33415580;
   mix-blend-mode: normal;
 }
+
+/* Usage counter */
+
+.usage {
+  margin-top: 14px;
+  padding: 10px 12px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.usage-cost { color: #64748b; font-style: italic; }
+
+button.small { padding: 4px 10px; font-size: 0.8rem; margin-left: auto; }
