@@ -5,6 +5,18 @@
   var Sudoku = global.Sudoku;
   var MistralClient = global.MistralClient;
   var SpeechService = global.SpeechService;
+  var VoiceRecorder = global.VoiceRecorder;
+
+  function micLabel(s) {
+    if (s.transcribing) return "⏳ Transcription…";
+    if (s.listening) return "● En écoute (cliquer pour arrêter)";
+    return s.engine === "mistral" ? "🎤 Micro (Mistral)" : "🎤 Micro";
+  }
+
+  function micTitle(s) {
+    if (s.engine === "mistral") return "Dictée enregistrée puis transcrite par Mistral (Voxtral)";
+    return "Parler (français)";
+  }
 
   function client(s) {
     if (!s.settings.getApiKey().trim()) {
@@ -91,6 +103,9 @@
       s.error = "";
       s.listening = false;
       s.interim = "";
+      s.engine = null;
+      s.recorder = new VoiceRecorder();
+      s.transcribing = false;
       s.speech = new SpeechService();
       s.speech.onText = function (text) {
         s.input = text;
@@ -103,8 +118,13 @@
         m.redraw();
       };
       s.speech.onError = function (msg) {
-        s.error = msg;
         s.listening = false;
+        if (/erreur réseau/.test(msg)) {
+          s.error = "Moteur vocal du navigateur indisponible (Chromium sans clés API Google). Basculé sur la transcription Mistral — re-cliquez sur le micro pour dicter.";
+          s.engine = "mistral";
+        } else {
+          s.error = msg;
+        }
         m.redraw();
       };
       s.speech.onStateChange = function (on) {
@@ -117,6 +137,47 @@
         s.store.newGrid("facile");
       }
       s._scrollPending = true;
+    },
+    transcribeAndSend: function (s) {
+      if (s.transcribing) return;
+      s.transcribing = true;
+      s.error = "";
+      m.redraw();
+      s.recorder.stop().then(function (blob) {
+        if (!blob) throw new Error("Aucune parole captée");
+        var c;
+        try { c = client(s); } catch (e) { throw e; }
+        return c.transcribeAudio(blob).then(function (text) {
+          s.input = text;
+          m.redraw();
+          Game.send(s);
+        });
+      }).catch(function (e) {
+        s.error = e.message || String(e);
+      }).finally(function () {
+        s.transcribing = false;
+        m.redraw();
+      });
+    },
+    toggleMic: function (s) {
+      if (s.busy || s.transcribing) return;
+      if (s.engine === "mistral") {
+        if (s.listening) { Game.transcribeAndSend(s); return; }
+        s.error = "";
+        s.interim = "";
+        s.recorder.start().then(function () {
+          s.listening = true;
+          m.redraw();
+        }).catch(function (e) {
+          s.error = e.message || String(e);
+          m.redraw();
+        });
+        return;
+      }
+      if (s.listening) { s.speech.stop(); return; }
+      s.error = "";
+      s.interim = "";
+      s.speech.start("fr-FR");
     },
     send: function (s) {
       if (s.busy) return;
@@ -237,17 +298,12 @@
               }
             }),
             m("button.mic", {
-              class: s.listening ? "listening" : "",
-              title: s.speech.isSupported() ? "Parler (français)" : "Reconnaissance vocale non supportée",
-              disabled: !s.speech.isSupported(),
-              onclick: function () {
-                if (s.busy) return;
-                if (s.listening) { s.speech.stop(); return; }
-                s.error = "";
-                s.interim = "";
-                s.speech.start("fr-FR");
-              }
-            }, s.listening ? "● En écoute (cliquer pour arrêter)" : "🎤 Micro"),
+              class: s.listening || s.transcribing ? "listening" : "",
+              title: micTitle(s),
+              disabled: s.busy || (s.engine !== "mistral" && !s.speech.isSupported()) ||
+                (s.engine === "mistral" && !s.recorder.isSupported()),
+              onclick: function () { Game.toggleMic(s); }
+            }, micLabel(s)),
             m("button.send", {
               disabled: s.busy,
               onclick: function () { Game.send(s); }

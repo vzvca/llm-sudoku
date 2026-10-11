@@ -195,4 +195,29 @@ describe("MistralClient", function () {
   it("a un prompt système en français", function () {
     assert.ok(MistralClient.SYSTEM_PROMPT.indexOf("français") !== -1);
   });
+
+  it("transcrit un audio via FormData vers l'API transcriptions", function () {
+    var captured = null;
+    var realFetch = global.fetch;
+    global.fetch = function (url, opts) {
+      captured = { url: url, opts: opts };
+      return Promise.resolve({
+        ok: true,
+        json: function () { return Promise.resolve({ text: "  prépare une grille difficile  " }); }
+      });
+    };
+    var c = new MistralClient("key", "model");
+    return c.transcribeAudio({ fake: "blob" }).then(function (text) {
+      global.fetch = realFetch;
+      assert.equal(text, "prépare une grille difficile");
+      assert.equal(captured.url, "https://api.mistral.ai/v1/audio/transcriptions");
+      assert.equal(captured.opts.headers.Authorization, "Bearer key");
+      assert.ok(captured.opts.body instanceof FormData);
+      assert.equal(captured.opts.body.get("model"), MistralClient.TRANSCRIPTION_MODEL);
+      assert.equal(captured.opts.body.get("language"), "fr");
+    }).catch(function (e) {
+      global.fetch = realFetch;
+      throw e;
+    });
+  });
 });

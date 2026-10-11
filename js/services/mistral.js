@@ -6,6 +6,9 @@
 
   var DIFFICULTIES = ["facile", "moyen", "difficile"];
 
+  var TRANSCRIPTION_URL = "https://api.mistral.ai/v1/audio/transcriptions";
+  var TRANSCRIPTION_MODEL = "voxtral-small-latest";
+
   var TOOLS = [
     {
       type: "function",
@@ -189,6 +192,30 @@
     }).filter(function (c) { return !!c.name; });
   }
 
+  MistralClient.prototype.transcribeAudio = function (blob, options) {
+    options = options || {};
+    var form = new FormData();
+    form.append("file", blob, "dictée.webm");
+    form.append("model", options.model || TRANSCRIPTION_MODEL);
+    form.append("language", options.language || "fr");
+    return fetch(TRANSCRIPTION_URL, {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + this.apiKey },
+      body: form
+    }).then(function (res) {
+      if (!res.ok) {
+        return res.text().then(function (t) {
+          throw new Error("Transcription Mistral " + res.status + " : " + t.slice(0, 300));
+        });
+      }
+      return res.json();
+    }).then(function (data) {
+      var text = data && typeof data.text === "string" ? data.text.trim() : "";
+      if (!text) throw new Error("Transcription vide");
+      return text;
+    });
+  };
+
   MistralClient.prototype.interpret = function (userText, context) {
     var messages = [{ role: "system", content: SYSTEM_PROMPT }];
     if (context) {
@@ -216,6 +243,7 @@
 
   MistralClient.DEFAULT_MODEL = DEFAULT_MODEL;
   MistralClient.DIFFICULTIES = DIFFICULTIES;
+  MistralClient.TRANSCRIPTION_MODEL = TRANSCRIPTION_MODEL;
   MistralClient.TOOLS = TOOLS;
   MistralClient.SYSTEM_PROMPT = SYSTEM_PROMPT;
 
