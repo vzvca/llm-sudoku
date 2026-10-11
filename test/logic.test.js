@@ -207,7 +207,7 @@ describe("MistralClient", function () {
       });
     };
     var c = new MistralClient("key", "model");
-    return c.transcribeAudio({ fake: "blob" }).then(function (text) {
+    return c.transcribeAudio(new Blob(["audio"], { type: "audio/webm" })).then(function (text) {
       global.fetch = realFetch;
       assert.equal(text, "prépare une grille difficile");
       assert.equal(captured.url, "https://api.mistral.ai/v1/audio/transcriptions");
