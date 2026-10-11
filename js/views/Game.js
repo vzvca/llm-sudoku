@@ -156,7 +156,7 @@
         if (!blob) return null;
         var c;
         try { c = client(s); } catch (e) { throw e; }
-        return c.transcribeAudio(blob);
+        return c.transcribeAudioLoose(blob);
       }).then(function (tailText) {
         var text = [s.transcribed, tailText]
           .filter(function (t) { return t && t.trim(); })

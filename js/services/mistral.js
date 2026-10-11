@@ -216,6 +216,14 @@
     });
   };
 
+  MistralClient.prototype.transcribeAudioLoose = function (blob, options) {
+    return this.transcribeAudio(blob, options)
+      .catch(function (e) {
+        if (e && /Transcription vide/.test(e.message)) return "";
+        throw e;
+      });
+  };
+
   MistralClient.prototype.interpret = function (userText, context) {
     var messages = [{ role: "system", content: SYSTEM_PROMPT }];
     if (context) {
