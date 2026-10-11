@@ -40,10 +40,11 @@
     if (!mr) return Promise.resolve(null);
     return new Promise(function (resolve) {
       mr.onstop = function () {
+        var chunks = self.chunks;
         self._cleanup();
         if (self.onStateChange) self.onStateChange(false);
-        if (self.chunks.length === 0) return resolve(null);
-        resolve(new Blob(self.chunks, { type: mr.mimeType || "audio/webm" }));
+        if (chunks.length === 0) return resolve(null);
+        resolve(new Blob(chunks, { type: mr.mimeType || "audio/webm" }));
       };
       try { mr.stop(); } catch (e) {
         self._cleanup();

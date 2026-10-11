@@ -207,3 +207,34 @@ button.mic.listening { background: var(--danger); border-color: var(--danger); c
 .settings-card .hint { color: var(--user); font-size: 0.9rem; }
 .settings-card ul { margin: 8px 0 0; padding-left: 20px; }
 .saved { color: var(--ok); font-weight: 700; }
+
+/* Micro test */
+
+.mic-test { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+
+.mic-meter {
+  position: relative;
+  height: 22px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.mic-meter-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--ok), #fbbf24 60%, var(--danger));
+  border-radius: 999px;
+  transition: width 60ms linear;
+}
+
+.mic-level {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #33415580;
+  mix-blend-mode: normal;
+}
