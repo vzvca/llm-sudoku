@@ -104,6 +104,8 @@
       s.interim = "";
       s.engine = "mistral";
       s.recorder = new VoiceRecorder();
+      s.transcribed = "";
+      s.transcribeTimer = null;
       s.transcribing = false;
       s.speech = new SpeechService();
       s.speech.onText = function (text) {
@@ -137,26 +139,67 @@
       }
       s._scrollPending = true;
     },
+    onremove: function (vnode) {
+      var s = vnode.state;
+      Game.stopTranscribeLoop(s);
+      if (s.recorder) s.recorder.cancel();
+    },
     transcribeAndSend: function (s) {
       if (s.transcribing) return;
       s.transcribing = true;
       s.error = "";
       m.redraw();
       s.recorder.stop().then(function (blob) {
-        if (!blob) throw new Error("Aucune parole captée");
+        if (!blob) return null;
         var c;
         try { c = client(s); } catch (e) { throw e; }
-        return c.transcribeAudio(blob).then(function (text) {
-          s.input = text;
-          m.redraw();
-          Game.send(s);
-        });
+        return c.transcribeAudio(blob);
+      }).then(function (tailText) {
+        var text = [s.transcribed, tailText]
+          .filter(function (t) { return t && t.trim(); })
+          .join(" ")
+          .trim();
+        if (!text) throw new Error("Aucune parole captée");
+        s.input = "";
+        s.transcribed = "";
+        s.interim = "";
+        m.redraw();
+        Game.send(s, text);
       }).catch(function (e) {
         s.error = e.message || String(e);
       }).finally(function () {
         s.transcribing = false;
+        Game.stopTranscribeLoop(s);
         m.redraw();
       });
+    },
+    transcribeTick: function (s) {
+      if (!s.listening || s.transcribing) return;
+      var c;
+      try { c = client(s); } catch (e) { return; }
+      s.recorder.cutSegment().then(function (blob) {
+        if (!blob) return;
+        return c.transcribeAudio(blob).then(function (text) {
+          if (text) {
+            s.transcribed = (s.transcribed ? s.transcribed + " " : "") + text;
+            s.interim = s.transcribed;
+            s._scrollPending = true;
+            m.redraw();
+          }
+        });
+      }).catch(function () {});
+    },
+    startTranscribeLoop: function (s) {
+      Game.stopTranscribeLoop(s);
+      s.transcribeTimer = setInterval(function () {
+        if (s.listening && !s.transcribing) Game.transcribeTick(s);
+      }, 4000);
+    },
+    stopTranscribeLoop: function (s) {
+      if (s.transcribeTimer) {
+        clearInterval(s.transcribeTimer);
+        s.transcribeTimer = null;
+      }
     },
     toggleMic: function (s) {
       if (s.busy || s.transcribing) return;
@@ -164,8 +207,10 @@
         if (s.listening) { Game.transcribeAndSend(s); return; }
         s.error = "";
         s.interim = "";
+        s.transcribed = "";
         s.recorder.start().then(function () {
           s.listening = true;
+          Game.startTranscribeLoop(s);
           m.redraw();
         }).catch(function (e) {
           s.error = e.message || String(e);
@@ -178,13 +223,16 @@
       s.interim = "";
       s.speech.start("fr-FR");
     },
-    send: function (s) {
+    send: function (s, directText) {
       if (s.busy) return;
-      var text = s.input.trim() || (s.interim || "").trim();
+      var text = directText ? String(directText).trim()
+        : s.input.trim() || (s.interim || "").trim();
       if (!text) return;
-      if (s.listening) s.speech.stop();
-      s.input = "";
-      s.interim = "";
+      if (s.listening && s.engine !== "mistral") s.speech.stop();
+      if (!directText) {
+        s.input = "";
+        s.interim = "";
+      }
       s.busy = true;
       s.error = "";
       s._scrollPending = true;
