@@ -196,7 +196,7 @@
       Game.stopTranscribeLoop(s);
       s.transcribeTimer = setInterval(function () {
         if (s.listening && !s.transcribing) Game.transcribeTick(s);
-      }, 4000);
+      }, 2000);
     },
     stopTranscribeLoop: function (s) {
       if (s.transcribeTimer) {
