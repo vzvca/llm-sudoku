@@ -90,11 +90,17 @@
       s.busy = false;
       s.error = "";
       s.listening = false;
+      s.interim = "";
       s.speech = new SpeechService();
       s.speech.onText = function (text) {
         s.input = text;
         m.redraw();
         Game.send(s);
+      };
+      s.speech.onInterim = function (text) {
+        s.interim = text;
+        s._scrollPending = true;
+        m.redraw();
       };
       s.speech.onError = function (msg) {
         s.error = msg;
@@ -103,6 +109,7 @@
       };
       s.speech.onStateChange = function (on) {
         s.listening = on;
+        if (!on) s.interim = "";
         m.redraw();
       };
       if (s.store.values.every(function (v) { return !v; }) &&
@@ -113,9 +120,11 @@
     },
     send: function (s) {
       if (s.busy) return;
-      var text = s.input.trim();
+      var text = s.input.trim() || (s.interim || "").trim();
       if (!text) return;
+      if (s.listening) s.speech.stop();
       s.input = "";
+      s.interim = "";
       s.busy = true;
       s.error = "";
       s._scrollPending = true;
@@ -214,6 +223,7 @@
             }, s.messages.map(function (msg, idx) {
               return m("div.chat-msg." + msg.role, { key: idx }, msg.text);
             })),
+            s.listening && s.interim ? m("div.chat-msg.system", "… « " + s.interim + " »") : null,
             s.busy ? m("div.chat-msg.system", "L'IA réfléchit…") : null,
             s.error ? m("div.chat-error", s.error) : null
           ]),
@@ -231,11 +241,13 @@
               title: s.speech.isSupported() ? "Parler (français)" : "Reconnaissance vocale non supportée",
               disabled: !s.speech.isSupported(),
               onclick: function () {
+                if (s.busy) return;
                 if (s.listening) { s.speech.stop(); return; }
                 s.error = "";
+                s.interim = "";
                 s.speech.start("fr-FR");
               }
-            }, s.listening ? "● En écoute" : "🎤 Micro"),
+            }, s.listening ? "● En écoute (cliquer pour arrêter)" : "🎤 Micro"),
             m("button.send", {
               disabled: s.busy,
               onclick: function () { Game.send(s); }
