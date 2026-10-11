@@ -7,7 +7,7 @@
   var DIFFICULTIES = ["facile", "moyen", "difficile"];
 
   var TRANSCRIPTION_URL = "https://api.mistral.ai/v1/audio/transcriptions";
-  var TRANSCRIPTION_MODEL = "voxtral-small-latest";
+  var TRANSCRIPTION_MODEL = "voxtral-mini-latest";
 
   var TOOLS = [
     {
