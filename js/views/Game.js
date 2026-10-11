@@ -9,13 +9,12 @@
 
   function micLabel(s) {
     if (s.transcribing) return "⏳ Transcription…";
-    if (s.listening) return "● En écoute (cliquer pour arrêter)";
-    return s.engine === "mistral" ? "🎤 Micro (Mistral)" : "🎤 Micro";
+    if (s.listening) return "● En écoute (cliquer pour arrêter et transcrire)";
+    return "🎤 Micro";
   }
 
-  function micTitle(s) {
-    if (s.engine === "mistral") return "Dictée enregistrée puis transcrite par Mistral (Voxtral)";
-    return "Parler (français)";
+  function micTitle() {
+    return "Dictée enregistrée puis transcrite par Mistral (Voxtral, français) : 1er clic = enregistrer, 2e clic = transcrire et envoyer";
   }
 
   function client(s) {
@@ -103,7 +102,7 @@
       s.error = "";
       s.listening = false;
       s.interim = "";
-      s.engine = null;
+      s.engine = "mistral";
       s.recorder = new VoiceRecorder();
       s.transcribing = false;
       s.speech = new SpeechService();

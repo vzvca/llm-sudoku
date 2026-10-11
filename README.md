@@ -45,7 +45,9 @@ dépendance à installer ; mithril est servi localement depuis `vendor/`).
    ailleurs qu'à `api.mistral.ai`) et éventuellement le modèle
    (`mistral-small-latest` par défaut).
 2. Onglet **Jeu** : jouer, taper ou dicter des commandes.
-   La reconnaissance vocale nécessite Chrome ou Edge (API `SpeechRecognition`).
+   La dictée est enregistrée via `MediaRecorder` puis transcrite par Mistral
+   (Voxtral, `POST /v1/audio/transcriptions`, langue `fr`). Le micro est togglé :
+   1er clic = enregistrer, 2e clic = arrêter, transcrire et envoyer.
 
 ## Tests
 
