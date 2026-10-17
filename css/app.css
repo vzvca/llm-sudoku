@@ -1,0 +1,258 @@
+:root {
+  --bg: #f4f6f9;
+  --panel: #ffffff;
+  --ink: #1e2430;
+  --accent: #2563eb;
+  --accent-soft: #dbeafe;
+  --line: #cbd5e1;
+  --given: #334155;
+  --user: #94a3b8;
+  --danger: #dc2626;
+  --ok: #16a34a;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.layout { max-width: 1000px; margin: 0 auto; padding: 0 16px 48px; }
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 0;
+  position: relative;
+}
+
+.topbar h1 { font-size: 1.3rem; margin: 0; }
+
+.topbar nav { display: flex; gap: 8px; }
+
+.navlink {
+  padding: 6px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.navlink:hover { background: var(--accent-soft); }
+
+.toast {
+  position: absolute;
+  right: 0;
+  top: 64px;
+  background: var(--ink);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  z-index: 10;
+}
+
+main { display: block; }
+
+/* Board */
+
+.game {
+  display: grid;
+  grid-template-columns: minmax(340px, 1fr) minmax(300px, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 760px) {
+  .game { grid-template-columns: 1fr; }
+}
+
+.game-status { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+
+.badge {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 0.85rem;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  background: var(--ink);
+  gap: 2px;
+  padding: 6px;
+  border-radius: 10px;
+  max-width: 480px;
+  user-select: none;
+}
+
+.cell {
+  aspect-ratio: 1;
+  background: var(--panel);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1rem, 3.4vw, 1.6rem);
+  cursor: pointer;
+}
+
+.cell.btop { border-top: 2px solid var(--ink); }
+.cell.bleft { border-left: 2px solid var(--ink); }
+
+.cell.given { color: var(--given); font-weight: 700; }
+.cell:not(.given) { color: var(--accent); }
+
+.cell.selected { background: var(--accent-soft); }
+.cell.hint { background: #fef9c3; }
+.cell.conflict { background: #fee2e2; color: var(--danger); }
+
+.board-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+
+button {
+  font: inherit;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+button:disabled { opacity: 0.5; cursor: default; }
+button.primary, .chat-input button.send { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.primary:hover { filter: brightness(1.1); }
+
+.difficulty-picker { display: flex; gap: 8px; margin-top: 10px; }
+.difficulty-picker button.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 700; }
+
+/* Chat */
+
+.game-right { display: flex; flex-direction: column; gap: 10px; }
+
+.chat {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  min-height: 280px;
+  max-height: 420px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+
+.chat-msg {
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  max-width: 90%;
+  white-space: pre-wrap;
+}
+
+.chat-msg.user { align-self: flex-end; background: var(--accent); color: #fff; }
+.chat-msg.assistant { align-self: flex-start; background: var(--accent-soft); }
+.chat-msg.tool { align-self: flex-start; background: #f1f5f9; font-family: ui-monospace, monospace; font-size: 0.8rem; color: var(--user); }
+.chat-msg.action { align-self: flex-start; background: #ecfdf5; border: 1px solid #bbf7d0; }
+.chat-msg.system { align-self: center; color: var(--user); font-style: italic; }
+
+.chat-error { color: var(--danger); font-size: 0.85rem; margin-top: 6px; }
+
+.chat-input { display: flex; gap: 8px; }
+
+.chat-input input[type=text] {
+  flex: 1;
+  font: inherit;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+button.mic.listening { background: var(--danger); border-color: var(--danger); color: #fff; animation: pulse 1.2s infinite; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Settings */
+
+.settings { display: flex; flex-direction: column; gap: 16px; max-width: 640px; }
+
+.settings-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.settings-card h3 { margin-top: 0; }
+.settings-card .row { display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+.settings-card input[type=text], .settings-card input[type=password] {
+  flex: 1;
+  font: inherit;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  min-width: 220px;
+}
+.settings-card label { font-weight: 600; }
+.settings-card .hint { color: var(--user); font-size: 0.9rem; }
+.settings-card ul { margin: 8px 0 0; padding-left: 20px; }
+.saved { color: var(--ok); font-weight: 700; }
+
+/* Micro test */
+
+.mic-test { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+
+.mic-meter {
+  position: relative;
+  height: 22px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.mic-meter-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--ok), #fbbf24 60%, var(--danger));
+  border-radius: 999px;
+  transition: width 60ms linear;
+}
+
+.mic-level {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #33415580;
+  mix-blend-mode: normal;
+}
+
+/* Usage counter */
+
+.usage {
+  margin-top: 14px;
+  padding: 10px 12px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.usage-cost { color: #64748b; font-style: italic; }
+
+button.small { padding: 4px 10px; font-size: 0.8rem; margin-left: auto; }
