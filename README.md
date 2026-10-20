@@ -1,5 +1,13 @@
 # llm-sudoku
 
+> [!NOTE]
+> **About the authorship**
+>
+> This program and its documentation were written from A to Z by
+> **mistral-vibe** (Mistral AI's coding agent, powered by the GLM model),
+> under human supervision: the project owner defined the goals and
+> reviewed, tested and merged each step.
+
 Application web single-page **sans backend** de jeu de sudoku, propulsée par
 l'IA Mistral. Écrite en JavaScript vanilla + [Mithril.js](https://mithril.js.org)
 (inspirée de l'architecture de [leitner](https://github.com/vzvca/leitner)).
